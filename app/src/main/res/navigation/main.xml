@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    app:startDestination="@id/trips">
+
+    <fragment
+        android:id="@+id/trips"
+        android:name="com.amrabed.tripplan.view.trip.TripListFragment"
+        android:label="@string/trips"
+        tools:layout="@layout/trip_list_fragment">
+
+        <action
+            android:id="@+id/showDetails"
+            app:destination="@id/tripDetails"
+            app:enterAnim="@anim/fragment_fade_enter"
+            app:exitAnim="@anim/fragment_fade_exit"
+            app:popEnterAnim="@anim/fragment_fade_enter"
+            app:popExitAnim="@anim/fragment_fade_exit"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/showFilterDialog"
+            app:destination="@id/filterDialog" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/filterDialog"
+        android:name="com.amrabed.tripplan.view.trip.FilterDialog" />
+
+    <fragment
+        android:id="@+id/tripDetails"
+        android:name="com.amrabed.tripplan.view.trip.TripDetailsFragment"
+        android:label=""
+        tools:layout="@layout/trip_details_fragment">
+        <action
+            android:id="@+id/showDatePickerDialog"
+            app:destination="@id/datePikerDialog" />
+        <action
+            android:id="@+id/backToTrips"
+            app:destination="@id/trips"
+            app:popUpTo="@id/trips"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/datePikerDialog"
+        android:name="com.amrabed.tripplan.view.trip.TripDateDialog">
+        <argument
+            android:name="updateStartDate"
+            android:defaultValue="false" />
+    </dialog>
+
+    <fragment
+        android:id="@+id/users"
+        android:name="com.amrabed.tripplan.view.user.UserListView"
+        android:label="@string/users"
+        tools:layout="@layout/user_list_fragment">
+        <action
+            android:id="@+id/showUserProfile"
+            app:destination="@id/userProfile" />
+        <action
+            android:id="@+id/newUserProfile"
+            app:destination="@id/userProfileEditor" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userProfileEditor"
+        android:name="com.amrabed.tripplan.view.user.UserProfileEditFragment"
+        android:label=""
+        tools:layout="@layout/user_profile_edit_fragment">
+        <action
+            android:id="@+id/backToUserList"
+            app:destination="@id/users"
+            app:popUpTo="@id/users"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/changeUserRole"
+            app:destination="@id/userRoleDialog" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/userProfile"
+        android:name="com.amrabed.tripplan.view.user.UserProfileFragment"
+        android:label=""
+        tools:layout="@layout/user_profile_fragment">
+        <action
+            android:id="@+id/showUserTrips"
+            app:destination="@id/trips" />
+        <action
+            android:id="@+id/editUserProfile"
+            app:destination="@id/userProfileEditor"
+            app:popUpTo="@id/userProfile"
+            app:popUpToInclusive="true">
+            <argument
+                android:name="new"
+                android:defaultValue="false" />
+        </action>
+        <action
+            android:id="@+id/changeUserRole"
+            app:destination="@id/userRoleDialog" />
+        <action
+            android:id="@+id/deleteUser"
+            app:destination="@id/userDeleteDialog" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/userRoleDialog"
+        android:name="com.amrabed.tripplan.view.user.UserRoleDialog">
+        <action
+            android:id="@+id/backToUser"
+            app:destination="@id/userProfile"
+            app:popUpTo="@id/userProfile"
+            app:popUpToInclusive="true" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/userDeleteDialog"
+        android:name="com.amrabed.tripplan.view.user.UserDeleteDialog">
+        <action
+            android:id="@+id/backToUserList"
+            app:destination="@id/users"
+            app:popUpTo="@id/users"
+            app:popUpToInclusive="true" />
+    </dialog>
+</navigation>

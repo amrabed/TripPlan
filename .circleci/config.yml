@@ -1,0 +1,128 @@
+version: 2.1
+
+executors:
+  android:
+    docker:
+      - image: circleci/android:api-29
+
+parameters:
+  gradle-key:
+    type: string
+    default: gradle-{{ .Branch }}-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+
+  gem-key:
+    type: string
+    default: gem-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+
+commands:
+  restore-keys:
+    description: "Create keystore.jks and keystore.properties from environment variables"
+    steps:
+      - run:
+          name: Create keystore.jks
+          command: echo $KEYSTORE | base64 -d > keystore.jks
+      - run:
+          name: Create keystore.properties
+          command: printf "keyAlias=%s\nkeyPassword=%s\nstorePassword=%s\n" $KEY_ALIAS $KEY_PASSWORD $STORE_PASSWORD > keystore.properties
+      - run:
+          name: Create fastlane-service-account-key.json
+          command: echo $DEPLOY_KEY | base64 -d > fastlane-service-account-key.json
+      - run:
+          name: Create google-services.json
+          command: echo $GOOGLE_SERVICES | base64 -d > app/google-services.json
+      - run:
+          name: Create gcloud-service-key.json
+          command: echo $GCLOUD_KEY | base64 -d > gcloud-service-key.json
+
+  save-gradle-cache:
+    description: "Save Gradle cache"
+    steps:
+      - save_cache:
+          paths:
+            - ~/.gradle
+            - ~/.m2
+          key: << pipeline.parameters.gradle-key >>
+
+  restore-gradle-cache:
+    description: "Restore Gradle cache"
+    steps:
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.gradle-key >>
+
+  install-fastlane:
+    description: "Install FastLane and plugins"
+    steps:
+      - save_cache:
+          paths:
+            - ~/.bundle
+          key: << pipeline.parameters.gem-key >>
+      - run:
+          name: Install FastLane and plugins
+          command: bundle install
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.gem-key >>
+
+jobs:
+  build:
+    executor: android
+    steps:
+      - checkout
+      - restore-keys
+      - restore-gradle-cache
+      - run:
+          name: Build debug APK
+          command: ./gradlew build
+      - run:
+          name: Analyze on SonarCloud
+          command: ./gradlew sonarqube
+      - save-gradle-cache
+
+  test:
+    executor: android
+    steps:
+      - checkout
+      - restore-keys
+      - install-fastlane
+      - restore-gradle-cache
+      - run:
+          name: Run tests on Firebase Test Lab
+          command: bundle exec fastlane test
+      - save-gradle-cache
+
+  deploy:
+    executor: android
+    steps:
+      - checkout
+      - restore-keys
+      - install-fastlane
+      - restore-gradle-cache
+      - run:
+          name: Deploy to Play Store (beta)
+          command: bundle exec fastlane beta
+      - save-gradle-cache
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
+          filters:
+            tags:
+              only: /.*/
+      #      - test:
+      #          requires:
+      #            - build
+      #          filters:
+      #            tags:
+      #              only: /.*/
+      - deploy:
+          requires:
+            - build
+          #            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

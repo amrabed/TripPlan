@@ -1,0 +1,2 @@
+json_key_file("fastlane-service-account-key.json") # See https://docs.fastlane.tools/getting-started/android/setup
+package_name("com.amrabed.tripplan")
